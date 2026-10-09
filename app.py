@@ -165,6 +165,15 @@ CANDIDATES = {
 @st.cache_data(ttl=86400, show_spinner=False)
 def candidate_photo(name):
     """Try to fetch a Wikipedia portrait, if available."""
+ 
+ 
+    # Verified Wikimedia Commons image for Adam Hamilton
+    if name == "Adam Hamilton":
+        return (
+            "https://commons.wikimedia.org/wiki/Special:FilePath/"
+            "Adam_Hamilton_on_the_Courage_to_Preach_%28cropped_2%29.png"
+        )
+
     import json
     import urllib.parse
     import urllib.request
@@ -222,10 +231,20 @@ if selected_state in CANDIDATES:
 
             photo = candidate_photo(name)
 
-            if photo:
-                st.image(photo, width=180)
-            else:
-                st.info("Photo unavailable")
+            
+if name == "Adam Hamilton":
+    st.caption(
+        "Photo: Western Pennsylvania Conference – UMC "
+        "via Wikimedia Commons · CC BY 4.0"
+    )
+    st.markdown(
+        "[Image source and license]"
+        "(https://commons.wikimedia.org/wiki/"
+        "File:Adam_Hamilton_on_the_Courage_to_Preach_"
+        "(cropped_2).png)"
+    )
+else:
+    st.caption("Image: Wikipedia / Wikimedia")
 
             st.markdown(f"### {name}")
 
