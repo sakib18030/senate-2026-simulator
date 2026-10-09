@@ -235,11 +235,11 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.markdown("🔴 **Republican**")
-    st.caption("Candidate profile and photo coming next.")
+    
 
 with col2:
     st.markdown("🔵 **Democratic**")
-    st.caption("Candidate profile and photo coming next.")
+    
 
 st.write(f"**Race rating:** {race['rating']}")
 st.write(
