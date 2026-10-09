@@ -127,6 +127,66 @@ with right:
     st.plotly_chart(map_fig,use_container_width=True)
     st.caption('Colored states show the *contested Senate seat only*, not both senators or presidential preference. Gray indicates uncalled. Click the state controls below to change colors.')
 
+# STATE ELECTION DETAILS
+st.subheader("🗳️ State Election Details")
+st.caption("Explore a 2026 Senate race and test its outcome.")
+
+state_names = {
+    row.abbr: row.state
+    for row in RACES.itertuples()
+}
+
+selected_state = st.selectbox(
+    "Choose a state",
+    options=list(state_names.keys()),
+    format_func=lambda abbr: state_names[abbr],
+    index=list(state_names.keys()).index("ME"),
+)
+
+race = RACES.set_index("abbr").loc[selected_state]
+current_choice = st.session_state.winners[selected_state]
+
+st.markdown(f"### {race['state']}")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("🔴 **Republican**")
+    st.caption("Candidate profile and photo coming next.")
+
+with col2:
+    st.markdown("🔵 **Democratic**")
+    st.caption("Candidate profile and photo coming next.")
+
+st.write(f"**Race rating:** {race['rating']}")
+st.write(
+    "**Current scenario:** "
+    + {"R": "Republican", "D": "Democratic", None: "Uncalled"}[current_choice]
+)
+
+left, middle, right = st.columns(3)
+
+def update_selected_race(party):
+    st.session_state.winners[selected_state] = party
+    st.session_state.revision += 1
+
+with left:
+    if st.button("🔴 Republican wins", use_container_width=True):
+        update_selected_race("R")
+        st.rerun()
+
+with middle:
+    if st.button("🔵 Democrat wins", use_container_width=True):
+        update_selected_race("D")
+        st.rerun()
+
+with right:
+    if st.button("⚪ Uncalled", use_container_width=True):
+        update_selected_race(None)
+        st.rerun()
+
+st.divider()
+
 st.subheader('🎛️ Flip the races')
 st.caption('Select 🔵 D, 🔴 R, or ⚪ uncalled for each state. Every selection recalculates the Senate above.')
 
