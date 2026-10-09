@@ -148,6 +148,89 @@ current_choice = st.session_state.winners[selected_state]
 
 st.markdown(f"### {race['state']}")
 
+# Candidate profiles — 2026 highlighted Senate races
+CANDIDATES = {
+    "AK": {"R": "Dan Sullivan", "D": "Mary Peltola"},
+    "IA": {"R": "Ashley Hinson", "D": "Josh Turek"},
+    "KS": {"R": "Roger Marshall", "D": "Adam Hamilton"},
+    "ME": {"R": "Susan Collins", "D": "Troy Jackson"},
+    "MI": {"R": "Mike Rogers", "D": "Abdul El-Sayed"},
+    "OH": {"R": "Jon Husted", "D": "Sherrod Brown"},
+    "TX": {"R": "Ken Paxton", "D": "James Talarico"},
+}
+
+@st.cache_data(ttl=86400, show_spinner=False)
+def candidate_photo(name):
+    """Try to fetch a Wikipedia portrait, if available."""
+    import json
+    import urllib.parse
+    import urllib.request
+
+    params = urllib.parse.urlencode({
+        "action": "query",
+        "format": "json",
+        "prop": "pageimages",
+        "piprop": "thumbnail",
+        "pithumbsize": 350,
+        "redirects": 1,
+        "titles": name,
+    })
+
+    url = "https://en.wikipedia.org/w/api.php?" + params
+
+    try:
+        request = urllib.request.Request(
+            url,
+            headers={"User-Agent": "SenateSimulatorPortfolio/1.0"}
+        )
+        with urllib.request.urlopen(request, timeout=5) as response:
+            data = json.load(response)
+
+        for page in data["query"]["pages"].values():
+            if page.get("title", "").lower() == name.lower():
+                return page.get("thumbnail", {}).get("source")
+    except Exception:
+        pass
+
+    return None
+
+
+if selected_state in CANDIDATES:
+    candidates = CANDIDATES[selected_state]
+
+    st.markdown("#### Meet the Candidates")
+
+    col1, col2 = st.columns(2)
+
+    for column, party, color in [
+        (col1, "R", "#ef5b63"),
+        (col2, "D", "#478cf4"),
+    ]:
+        with column:
+            name = candidates[party]
+            st.markdown(
+                f"<h4 style='color:{color};'>"
+                f"{'Republican' if party == 'R' else 'Democrat'}"
+                "</h4>",
+                unsafe_allow_html=True,
+            )
+
+            photo = candidate_photo(name)
+
+            if photo:
+                st.image(photo, width=165)
+                st.caption("Image: Wikipedia")
+            else:
+                st.info("Candidate photo unavailable")
+
+            st.markdown(f"**{name}**")
+
+else:
+    st.info(
+        "Candidate profiles for this state "
+        "will be added in a future update."
+    )
+
 col1, col2 = st.columns(2)
 
 with col1:
