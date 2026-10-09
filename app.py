@@ -32,6 +32,7 @@ RACES = [
  ('WY','Wyoming','R','Solid R'),
 ]
 RACES = pd.DataFrame(RACES, columns=['abbr','state','holder','rating'])
+SWING_STATES = ["AK", "IA", "KS", "ME", "MI", "OH", "TX"]
 assert len(RACES) == 35 and (RACES.holder=='R').sum() == 22 and (RACES.holder=='D').sum() == 13
 assert (RACES.rating == 'Toss-up').sum() == 7
 
@@ -136,12 +137,14 @@ state_names = {
     for row in RACES.itertuples()
 }
 
+
 selected_state = st.selectbox(
     "Choose a state",
-    options=list(state_names.keys()),
+    options=SWING_STATES,
     format_func=lambda abbr: state_names[abbr],
-    index=list(state_names.keys()).index("ME"),
+    index=SWING_STATES.index("ME"),
 )
+
 
 race = RACES.set_index("abbr").loc[selected_state]
 current_choice = st.session_state.winners[selected_state]
@@ -427,10 +430,20 @@ st.divider()
 st.subheader('🎛️ Flip the races')
 st.caption('Select 🔵 D, 🔴 R, or ⚪ uncalled for each state. Every selection recalculates the Senate above.')
 
-race_df=RACES.copy()
-if show_filter=='Seven toss-ups': race_df=race_df[race_df.rating=='Toss-up']
-elif show_filter=='Other competitive races': race_df=race_df[race_df.rating.str.contains('Lean|Likely')]
-elif show_filter=='Safe / solid races': race_df=race_df[race_df.rating.str.startswith('Solid')]
+
+race_df = RACES.copy()
+
+if show_filter == 'Seven toss-ups':
+    race_df = race_df[race_df.rating == 'Toss-up']
+elif show_filter == 'Other competitive races':
+    race_df = race_df[
+        race_df.rating.str.contains('Lean|Likely')
+    ]
+elif show_filter == 'Safe / solid races':
+    race_df = race_df[
+        race_df.rating.str.startswith('Solid')
+    ]
+
 # Place closest races first, followed by lean/likely/solid.
 priority={'Toss-up':0,'Lean D':1,'Lean R':1,'Likely D':2,'Likely R':2,'Solid D':3,'Solid R':3}
 race_df=race_df.assign(priority=race_df.rating.map(priority)).sort_values(['priority','state'])
