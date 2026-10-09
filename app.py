@@ -250,7 +250,16 @@ POLLING = {
         "source": "RealClearPolling average",
         "dates": "September 14 – October 5, 2026",
         "url": "https://www.realclearpolling.com/polls/senate/general/2026/collins-vs-jackson",
-    }
+    },
+ 
+    "AK": {
+        "R": 47.3,
+        "D": 48.5,
+        "source": "RealClearPolling head-to-head average",
+        "dates": "September 14 – October 3, 2026",
+        "url": "https://www.realclearpolling.com/polls/senate/general/2026/alaska/peltola-vs-sullivan",
+    },
+
 }
 
 st.markdown("#### 📊 Current Polling")
