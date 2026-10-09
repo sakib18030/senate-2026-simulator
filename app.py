@@ -58,6 +58,24 @@ st.markdown('''<style>
 h1,h2,h3 {letter-spacing:-.035em}
 .block-container {padding-top:1.4rem}
 .stButton button {border-radius:10px}
+/* Seat balance: fixed + assigned 2026 contests = scenario total */
+.senate-seat-card {
+    background:#141e34;
+    border:1px solid #263651;
+    border-radius:14px;
+    padding:13px 16px;
+    min-height:196px;
+    box-sizing:border-box;
+}
+.senate-seat-heading {font-size:.85rem;color:#b9c8dd;margin-bottom:9px;}
+.senate-seat-row {display:flex;justify-content:space-between;align-items:center;
+    padding:4px 0;color:#b9c8dd;font-size:.87rem;gap:8px;}
+.senate-seat-row strong {color:#f0f5ff;font-size:1.18rem;}
+.senate-seat-total {border-top:1px solid #364561;margin-top:7px;padding-top:9px;}
+.senate-seat-total strong {color:var(--seat-accent);font-size:1.85rem;line-height:1.15;}
+.senate-seat-status {font-size:1.85rem;font-weight:650;color:#f0f5ff;line-height:1.2;
+    overflow-wrap:anywhere;margin:20px 0 6px;}
+.senate-seat-note {color:#a9b8d0;font-size:.79rem;line-height:1.4;}
 </style>''', unsafe_allow_html=True)
 
 with st.sidebar:
@@ -83,11 +101,44 @@ uncalled = 35-r_win-d_win
 R = FIXED_R+r_win
 D = FIXED_D+d_win
 
-a,b,c,d = st.columns(4)
-a.metric('🔴 Republican seats', R, delta=f'{R-53:+d} vs current', delta_color='off')
-b.metric('🔵 Democratic caucus', D, delta=f'{D-47:+d} vs current', delta_color='off')
-c.metric('⚪ Uncalled seats', uncalled)
-d.metric('🏛️ Senate control', 'Republicans' if R>=51 else 'Democrats' if D>=51 else 'Republicans (VP tie)' if R==50 and D==50 else 'Not yet decided')
+def seat_breakdown_card(title, accent, fixed, contested, total):
+    """Display the arithmetic behind each party's simulated Senate seats."""
+    st.markdown(
+        f'<div class="senate-seat-card" style="--seat-accent:{accent}">'
+        f'<div class="senate-seat-heading">{title}</div>'
+        f'<div class="senate-seat-row"><span>Fixed (not up)</span><strong>{fixed}</strong></div>'
+        f'<div class="senate-seat-row"><span>2026 assigned</span><strong>{contested}</strong></div>'
+        f'<div class="senate-seat-row senate-seat-total"><span><b>Total seats</b></span>'
+        f'<strong>{total}</strong></div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def senate_status_card(title, value, note):
+    st.markdown(
+        '<div class="senate-seat-card">'
+        f'<div class="senate-seat-heading">{title}</div>'
+        f'<div class="senate-seat-status">{value}</div>'
+        f'<div class="senate-seat-note">{note}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+a, b, c, d = st.columns(4, gap='small')
+with a:
+    seat_breakdown_card('🔴 Republican seats', RED, FIXED_R, r_win, R)
+with b:
+    seat_breakdown_card('🔵 Democratic caucus', BLUE, FIXED_D, d_win, D)
+with c:
+    senate_status_card('⚪ Uncalled seats', uncalled, '2026 races awaiting a scenario assignment')
+control = (
+    'Republicans' if R >= 51 else
+    'Democrats' if D >= 51 else
+    'Republicans (VP tie)' if R == 50 and D == 50 else
+    'Not yet decided'
+)
+with d:
+    senate_status_card('🏛️ Senate control', control, '51 seats needed for an outright majority')
 
 if R>=51: st.info(f'Republicans have at least 51 seats in this scenario. Democrats could finish with at most {D+uncalled}.')
 elif D>=51: st.info(f'Democrats have at least 51 seats in this scenario. Republicans could finish with at most {R+uncalled}.')
@@ -113,7 +164,16 @@ with left:
             outlines.append('#263651' if index <65 else '#e0e8ff')
             index+=1
     fig=go.Figure(go.Scatter(x=xs,y=ys,mode='markers',marker=dict(size=16,color=colors,line=dict(width=1,color='#63728c')),text=labels,hovertemplate='%{text}<extra></extra>'))
-    fig.update_layout(height=315,margin=dict(l=5,r=5,t=5,b=5),paper_bgcolor=BG,plot_bgcolor=BG,showlegend=False,xaxis=dict(visible=False,range=[-1.55,1.55],scaleanchor='y'),yaxis=dict(visible=False,range=[-.12,1.48]))
+    # Extra headroom keeps the outer ring of Senate dots fully visible.
+    fig.update_layout(
+        height=355,
+        margin=dict(l=8, r=8, t=18, b=6),
+        paper_bgcolor=BG,
+        plot_bgcolor=BG,
+        showlegend=False,
+        xaxis=dict(visible=False, range=[-1.72, 1.72], scaleanchor='y'),
+        yaxis=dict(visible=False, range=[-0.18, 1.72]),
+    )
     st.plotly_chart(fig, use_container_width=True)
     st.caption('100 dots = 100 seats. First 65 are locked; 35 reflect your selections. Blue includes independents caucusing with Democrats.')
 with right:
@@ -124,9 +184,39 @@ with right:
     map_data['z']=map_data.winner.map({'D':0,'R':1}).fillna(.5)
     map_data['hover']=map_data.apply(lambda row: f"{row['state']}<br>Held by: {row['holder']} · Rating: {row['rating']}<br>Selected: {row['winner'] or 'Uncalled'}",axis=1)
     map_fig=go.Figure(go.Choropleth(locations=map_data.abbr,locationmode='USA-states',z=map_data.z,zmin=0,zmax=1,colorscale=[[0,BLUE],[.499,BLUE],[.5,GRAY],[.501,RED],[1,RED]],showscale=False,text=map_data['hover'],hovertemplate='%{text}<extra></extra>',marker_line_color='#10182b',marker_line_width=1.1))
-    map_fig.update_layout(geo=dict(scope='usa',bgcolor=BG,showlakes=False,showland=True,landcolor='#30394c'),paper_bgcolor=BG,margin=dict(l=0,r=0,t=0,b=0),height=315)
-    st.plotly_chart(map_fig,use_container_width=True)
-    st.caption('Colored states show the *contested Senate seat only*, not both senators or presidential preference. Gray indicates uncalled. Click the state controls below to change colors.')
+    # Label all 50 states, including those with no 2026 Senate election.
+    # Small Northeast states may have close-spaced abbreviations at narrow widths.
+    all_state_abbrs = [
+        'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA',
+        'HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+        'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+        'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+        'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+    ]
+    map_fig.add_trace(go.Scattergeo(
+        locations=all_state_abbrs,
+        locationmode='USA-states',
+        mode='text',
+        text=all_state_abbrs,
+        textposition='middle center',
+        textfont=dict(color='#f5f8ff', size=10, family='Arial'),
+        hoverinfo='skip',
+        showlegend=False,
+    ))
+    map_fig.update_layout(
+        geo=dict(scope='usa', bgcolor=BG, showlakes=False,
+                 showland=True, landcolor='#30394c'),
+        paper_bgcolor=BG,
+        margin=dict(l=0, r=0, t=0, b=0),
+        height=355,
+    )
+    st.plotly_chart(map_fig, use_container_width=True)
+    st.caption(
+        'State abbreviations are shown for all 50 states (including AZ). '
+        'Red/blue indicates the selected outcome of a *contested Senate seat only*. '
+        'Gray can mean no 2026 Senate contest or an uncalled race. '
+        'Use the state controls below to change outcomes.'
+    )
 
 # STATE ELECTION DETAILS
 st.subheader("🗳️ State Election Details")
