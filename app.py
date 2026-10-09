@@ -241,6 +241,110 @@ with col2:
     st.markdown("🔵 **Democratic**")
     
 
+# Published polling snapshot
+# Percentages are measurements, not election results.
+POLLING = {
+    "ME": {
+        "R": 47.3,
+        "D": 48.3,
+        "source": "RealClearPolling average",
+        "dates": "September 14 – October 5, 2026",
+        "url": "https://www.realclearpolling.com/polls/senate/general/2026/collins-vs-jackson",
+    }
+}
+
+st.markdown("#### 📊 Current Polling")
+
+poll = POLLING.get(selected_state)
+
+if poll:
+    republican_pct = poll["R"]
+    democrat_pct = poll["D"]
+
+    left_poll, right_poll = st.columns(2)
+
+    with left_poll:
+        st.metric(
+            "🔴 Republican",
+            f"{republican_pct:.1f}%"
+        )
+
+    with right_poll:
+        st.metric(
+            "🔵 Democrat",
+            f"{democrat_pct:.1f}%"
+        )
+
+    # Horizontal polling comparison
+    import plotly.graph_objects as go
+
+    other_pct = max(
+        0, 100 - republican_pct - democrat_pct
+    )
+
+    polling_fig = go.Figure()
+
+    for label, value, color in [
+        ("Democrat", democrat_pct, "#478cf4"),
+        ("Republican", republican_pct, "#ef5b63"),
+        ("Other / undecided", other_pct, "#8c97aa"),
+    ]:
+        polling_fig.add_trace(
+            go.Bar(
+                y=["Polling share"],
+                x=[value],
+                name=label,
+                orientation="h",
+                marker_color=color,
+                hovertemplate=(
+                    f"{label}: {value:.1f}%<extra></extra>"
+                ),
+            )
+        )
+
+    polling_fig.update_layout(
+        barmode="stack",
+        height=130,
+        margin=dict(l=0, r=0, t=0, b=0),
+        paper_bgcolor="#0b1020",
+        plot_bgcolor="#0b1020",
+        font=dict(color="#edf2ff"),
+        xaxis=dict(
+            range=[0, 100],
+            visible=False,
+        ),
+        yaxis=dict(visible=False),
+        legend=dict(
+            orientation="h",
+            y=-0.3,
+        ),
+    )
+
+    st.plotly_chart(
+        polling_fig,
+        use_container_width=True,
+    )
+
+    st.caption(
+        f"Source: {poll['source']} | "
+        f"Period: {poll['dates']}"
+    )
+
+    st.markdown(
+        f"[View original polling data]({poll['url']})"
+    )
+
+else:
+    st.info(
+        "No verified polling snapshot loaded "
+        "for this state yet."
+    )
+
+st.caption(
+    "Polling is separate from your hypothetical "
+    "Senate election scenario."
+)
+
 st.write(f"**Race rating:** {race['rating']}")
 st.write(
     "**Current scenario:** "
