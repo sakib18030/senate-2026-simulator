@@ -259,6 +259,47 @@ POLLING = {
         "dates": "September 14 – October 3, 2026",
         "url": "https://www.realclearpolling.com/polls/senate/general/2026/alaska/peltola-vs-sullivan",
     },
+ 
+    "IA": {
+        "R": 45.3,
+        "D": 45.8,
+        "source": "RealClearPolling average",
+        "dates": "September 9 – October 6, 2026",
+        "url": "https://www.realclearpolling.com/elections/senate/2026/iowa",
+    },
+
+    "KS": {
+        "R": 45.6,
+        "D": 45.4,
+        "source": "RealClearPolling average",
+        "dates": "September 8 – October 4, 2026",
+        "url": "https://www.realclearpolling.com/polls/senate/general/2026/kansas/marshall-vs-hamilton",
+    },
+
+    "MI": {
+        "R": 44.9,
+        "D": 48.1,
+        "source": "RealClearPolling average",
+        "dates": "September 15 – October 6, 2026",
+        "url": "https://www.realclearpolling.com/polls/senate/general/2026/michigan/rogers-vs-el-sayed",
+    },
+
+    "OH": {
+        "R": 44.2,
+        "D": 47.3,
+        "source": "RealClearPolling average",
+        "dates": "September 1 – October 6, 2026",
+        "url": "https://www.realclearpolling.com/polls/senate/special-election/2026/ohio/husted-vs-brown",
+    },
+
+    "TX": {
+        "R": 45.3,
+        "D": 48.1,
+        "source": "RealClearPolling average",
+        "dates": "September 12 – October 5, 2026",
+        "url": "https://www.realclearpolling.com/elections/senate/2026/texas",
+    },
+
 
 }
 
