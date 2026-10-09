@@ -249,7 +249,7 @@ else:
     st.markdown(f"### {name}")
 
 
-else:
+#else:
     st.info(
         "Candidate profiles for this state "
         "will be added in a future update."
