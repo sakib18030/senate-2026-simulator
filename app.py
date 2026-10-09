@@ -69,13 +69,26 @@ def winners():
 
 def color(p): return {'R':RED,'D':BLUE,None:GRAY}[p]
 
-st.markdown('''<style>
-.stApp{background:#0b1020;color:#eaf0fe}
-[data-testid="stMetric"]{background:#152139;border:1px solid #2a3955;padding:15px;border-radius:14px}
-[data-testid="stMetricLabel"]{color:#a9b8d0}
-.stButton button{border-radius:10px}h1,h2,h3{letter-spacing:-.035em}
-.block-container{padding-top:1.5rem}
-</style>''',unsafe_allow_html=True)
+st.markdown("""<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+.stApp{background:#080e1b;color:#f5f7fc;font-family:Inter,sans-serif}
+.block-container{padding-top:.7rem;max-width:1550px;padding-left:2rem;padding-right:2rem}
+[data-testid="stSidebar"]{background:#101b2d;border-right:1px solid #29364b}
+[data-testid="stMetric"]{background:#101d32;border:1px solid #293c59;padding:16px 18px;border-radius:5px;border-top:3px solid #61738e}
+[data-testid="stMetricLabel"]{color:#a9bad3;font-size:.85rem}
+[data-testid="stMetricValue"]{font-family:'Barlow Condensed',sans-serif;font-size:2.7rem;font-weight:800}
+h1,h2,h3{font-family:'Barlow Condensed',sans-serif;letter-spacing:.015em;text-transform:uppercase}
+h1{font-size:3.2rem!important}h2,h3{color:#f5f8ff!important}
+.stButton button{border-radius:4px;border-color:#466080;font-weight:700}
+[data-testid="stPlotlyChart"]{border:1px solid #263850;background:#0e182a;border-radius:6px}
+[data-testid="stHorizontalBlock"]{gap:1rem}
+div[data-testid="stCaptionContainer"]{color:#98a9c3}
+.broadcast-bar{background:#d82d41;color:white;padding:8px 15px;font-size:12px;font-weight:800;letter-spacing:.15em;margin-bottom:9px;display:flex;justify-content:space-between}
+.broadcast-title{background:linear-gradient(90deg,#172a47,#0b1322);border-left:5px solid #d92f45;padding:17px 22px;margin-bottom:15px}
+.broadcast-title h1{font-family:'Barlow Condensed',sans-serif;font-size:3.4rem;margin:0;line-height:1;color:#fff}
+.broadcast-title p{color:#b6c6dd;margin:9px 0 0;font-size:13px}
+.section-strip{background:#152540;border-left:4px solid #e43c50;padding:8px 12px;font-size:15px;font-weight:800;letter-spacing:.08em;margin:12px 0}
+</style>""",unsafe_allow_html=True)
 
 with st.sidebar:
     st.markdown('### ⚙️ Scenario lab')
@@ -94,38 +107,21 @@ with st.sidebar:
     st.markdown('[Race ratings: Cook Political Report](https://www.cookpolitical.com/ratings/senate-race-ratings)')
     st.caption('The bundled snapshot was transcribed on Oct. 9, 2026. Race ratings are an Oct. 6 snapshot. Source availability and republication rights should be checked before using automated feeds.')
 
-st.title('🗳️ Senate 2026 · The Race for Control')
-st.caption('November 3, 2026 · Polling snapshot + your own what-if scenarios · Educational visualization')
+st.markdown('<div class="broadcast-bar"><span>THE SENATE RACE • 2026</span><span>POLLS + INTERACTIVE SCENARIOS</span></div>',unsafe_allow_html=True)
+st.markdown('<div class="broadcast-title"><h1>BATTLE FOR 51</h1><p>NOVEMBER 3, 2026 &nbsp; | &nbsp; 35 RACES ON THE BALLOT &nbsp; | &nbsp; POLLING SNAPSHOT IS NOT AN ELECTION RESULT</p></div>',unsafe_allow_html=True)
 w=winners(); R=FIXED_R+sum(x=='R' for x in w.values());D=FIXED_D+sum(x=='D' for x in w.values());U=100-R-D
 x,y,z,t=st.columns(4)
-x.metric('🔴 Republican assigned',R);y.metric('🔵 Democratic caucus assigned',D)
-z.metric('⚪ Unassigned races',U);t.metric('🏛️ Chamber', 'R guaranteed' if R>=51 else 'D guaranteed' if D>=51 else 'Not determined')
+x.metric('🔴 REPUBLICAN SEATS',R);y.metric('🔵 DEMOCRATIC CAUCUS',D)
+z.metric('⚪ UNASSIGNED RACES',U);t.metric('🏛️ MAJORITY STATUS', 'R 51+' if R>=51 else 'D 51+' if D>=51 else 'OPEN')
 st.progress(R/100,text=f'Assigned totals: {R} R / {D} D / {U} unassigned • 51 needed for an outright majority')
 if R>=51: st.info('The selected assignments give Republicans at least 51 seats.')
 elif D>=51: st.info('The selected assignments give the Democratic caucus at least 51 seats.')
 else: st.info(f'No majority assigned yet. Possible final ranges: Republican {R}–{R+U}; Democratic caucus {D}–{D+U}. The 50–50 tie-break depends on the vice president.')
 
-left,right=st.columns([1.05,1.15],gap='large')
+st.markdown('<div class="section-strip">NATIONAL ELECTION BOARD &nbsp; / &nbsp; SELECT A STATE TO EXPLORE</div>',unsafe_allow_html=True)
+left,right=st.columns([1.4,1],gap='large')
 with left:
-    st.subheader('100-seat Senate chamber')
-    all_seats=[('R','Fixed R')]*FIXED_R+[('D','Fixed Democratic caucus')]*FIXED_D+[(w[r.abbr],r.state) for r in races.itertuples()]
-    pts=[];i=0
-    for ring,n in enumerate([36,33,31]):
-        radius=1+ring*.26
-        for j in range(n):
-            theta=math.pi-(j+.5)*math.pi/n
-            party,label=all_seats[i]
-            pts.append((radius*math.cos(theta),radius*math.sin(theta),color(party),f'{label} · {party or "Unassigned"}', '#f5f7ff' if i>=65 else '#263851'))
-            i+=1
-    seatfig=go.Figure(go.Scatter(x=[q[0] for q in pts],y=[q[1] for q in pts],mode='markers',
-                  marker={'color':[q[2] for q in pts],'size':15,'line':{'width':1,'color':'#576783'}},
-                  text=[q[3] for q in pts],hovertemplate='%{text}<extra></extra>'))
-    seatfig.update_layout(height=330,paper_bgcolor=BG,plot_bgcolor=BG,margin=dict(l=0,r=0,t=0,b=0),showlegend=False,
-                          xaxis=dict(visible=False,range=[-1.5,1.5],scaleanchor='y'),yaxis=dict(visible=False,range=[-.1,1.52]))
-    st.plotly_chart(seatfig,use_container_width=True,key='seats_plot')
-    st.caption('First 65 seats are fixed. The remaining 35 reflect poll-leader assignments or manual overrides; gray = unassigned.')
-with right:
-    st.subheader('Map · select a contested state')
+    st.subheader('Contested states · interactive')
     md=races.copy();md['selected']=md.abbr.map(w);md['value']=md.selected.map({'D':0,'R':1}).fillna(.5)
     md['details']=md.apply(lambda r:f'{r.state}<br>Poll-based assignment: {poll_state(r.abbr) or "None"}<br>Scenario: {r.selected or "Unassigned"}<br>{r.rating}',axis=1)
     mapfig=go.Figure(go.Choropleth(locations=md.abbr,locationmode='USA-states',z=md.value,
@@ -145,7 +141,7 @@ with right:
           customdata=order,mode='markers',marker=dict(size=13,color='rgba(255,255,255,.12)',line=dict(color='#f2f3f5',width=.9)),
           text=order,hovertemplate='Select %{text} to edit<extra></extra>',showlegend=False))
     mapfig.update_layout(geo=dict(scope='usa',bgcolor=BG,showland=True,landcolor='#30394c',showlakes=False),
-                         paper_bgcolor=BG,margin=dict(l=0,r=0,t=0,b=0),height=330,dragmode=False)
+                         paper_bgcolor=BG,margin=dict(l=0,r=0,t=0,b=0),height=455,dragmode=False)
     event=st.plotly_chart(mapfig,use_container_width=True,key='interactive_map',on_select='rerun',selection_mode='points')
     selected_points=event.selection.points if event else []
     for point in selected_points:
@@ -156,10 +152,29 @@ with right:
             break
     st.caption('Select a state marker to open its race details below. Only contested states are colored; gray means unassigned.')
 
-st.divider()
+with right:
+    st.subheader('U.S. Senate election map')
+    all_seats=[('R','Fixed R')]*FIXED_R+[('D','Fixed Democratic caucus')]*FIXED_D+[(w[r.abbr],r.state) for r in races.itertuples()]
+    pts=[];i=0
+    for ring,n in enumerate([36,33,31]):
+        radius=1+ring*.26
+        for j in range(n):
+            theta=math.pi-(j+.5)*math.pi/n
+            party,label=all_seats[i]
+            pts.append((radius*math.cos(theta),radius*math.sin(theta),color(party),f'{label} · {party or "Unassigned"}', '#f5f7ff' if i>=65 else '#263851'))
+            i+=1
+    seatfig=go.Figure(go.Scatter(x=[q[0] for q in pts],y=[q[1] for q in pts],mode='markers',
+                  marker={'color':[q[2] for q in pts],'size':15,'line':{'width':1,'color':'#576783'}},
+                  text=[q[3] for q in pts],hovertemplate='%{text}<extra></extra>'))
+    seatfig.update_layout(height=350,paper_bgcolor=BG,plot_bgcolor=BG,margin=dict(l=0,r=0,t=0,b=0),showlegend=False,
+                          xaxis=dict(visible=False,range=[-1.5,1.5],scaleanchor='y'),yaxis=dict(visible=False,range=[-.1,1.52]))
+    st.plotly_chart(seatfig,use_container_width=True,key='seats_plot')
+    st.caption('First 65 seats are fixed. The remaining 35 reflect poll-leader assignments or manual overrides; gray = unassigned.')
+
+st.markdown('<div class="section-strip">RACE DESK &nbsp; / &nbsp; POLLING VS. YOUR SCENARIO</div>',unsafe_allow_html=True)
 a,b=st.columns([1,1.25],gap='large')
 with a:
-    st.subheader('🔎 Race explorer')
+    st.subheader('Candidate & polling desk')
     opt=list(races.abbr)
     current=st.session_state.selected_state
     state=st.selectbox('Choose one of the 35 contested seats',opt,index=opt.index(current) if current in opt else 0,
@@ -183,7 +198,7 @@ with a:
         st.caption('Single latest listed survey in the dataset, **not** a polling average. Other / undecided voters are not shown as a candidate.')
     else: st.warning('No verified polling entry loaded for this race. Its baseline assignment is uncalled.')
 with b:
-    st.subheader('🎛️ What-if controls')
+    st.subheader('Flip the seat · scenario lab')
     baseline=poll_state(state); current=w[state]
     st.caption(f'Poll snapshot assigns: {baseline or "Unassigned (missing data or tie)"}. Your choice does not alter the underlying poll numbers.')
     options=['Poll snapshot','Democratic win','Republican win','Unassigned']
@@ -204,7 +219,7 @@ with b:
     st.caption('These are scenario arithmetic totals, not statistical estimates of winning.')
 
 st.divider()
-st.subheader('All 35 races · overview')
+st.subheader('All 35 races · data table')
 overview=races.copy();overview['poll_D%']=overview.abbr.map(polls.dem_pct.to_dict());overview['poll_R%']=overview.abbr.map(polls.rep_pct.to_dict())
 overview['poll_reported']=overview.abbr.map(polls.reported_date.to_dict());overview['poll_based']=overview.abbr.map(defaults());overview['scenario']=overview.abbr.map(w)
 overview['user_override']=overview.abbr.map(lambda q:'Yes' if q in st.session_state.overrides else 'No')
