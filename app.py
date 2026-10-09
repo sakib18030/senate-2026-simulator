@@ -246,7 +246,7 @@ if name == "Adam Hamilton":
 else:
     st.caption("Image: Wikipedia / Wikimedia")
 
-            #st.markdown(f"### {name}")
+    st.markdown(f"### {name}")
 
 
 else:
