@@ -201,9 +201,10 @@ def candidate_photo(name):
 if selected_state in CANDIDATES:
     candidates = CANDIDATES[selected_state]
 
+ 
     st.markdown("#### Meet the Candidates")
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns(2, gap="small")
 
     for column, party, color in [
         (col1, "R", "#ef5b63"),
@@ -211,9 +212,10 @@ if selected_state in CANDIDATES:
     ]:
         with column:
             name = candidates[party]
+
             st.markdown(
-                f"<h4 style='color:{color};'>"
-                f"{'Republican' if party == 'R' else 'Democrat'}"
+                f"<h4 style='color:{color}; margin-bottom:8px;'>"
+                f"{'🔴 Republican' if party == 'R' else '🔵 Democrat'}"
                 "</h4>",
                 unsafe_allow_html=True,
             )
@@ -221,12 +223,12 @@ if selected_state in CANDIDATES:
             photo = candidate_photo(name)
 
             if photo:
-                st.image(photo, width=165)
-                st.caption("Image: Wikipedia")
+                st.image(photo, width=180)
             else:
-                st.info("Candidate photo unavailable")
+                st.info("Photo unavailable")
 
-            st.markdown(f"**{name}**")
+            st.markdown(f"### {name}")
+
 
 else:
     st.info(
@@ -234,15 +236,9 @@ else:
         "will be added in a future update."
     )
 
-col1, col2 = st.columns(2)
 
-with col1:
-    st.markdown("🔴 **Republican**")
-    
 
-with col2:
-    st.markdown("🔵 **Democratic**")
-    
+
 
 # Published polling snapshot
 # Percentages are measurements, not election results.
