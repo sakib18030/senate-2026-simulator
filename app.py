@@ -164,99 +164,101 @@ CANDIDATES = {
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def candidate_photo(name):
-    """Try to fetch a Wikipedia portrait, if available."""
- 
- 
-    # Verified Wikimedia Commons image for Adam Hamilton
-    if name == "Adam Hamilton":
-        return (
-            "https://commons.wikimedia.org/wiki/Special:FilePath/"
-            "Adam_Hamilton_on_the_Courage_to_Preach_%28cropped_2%29.png"
-        )
-
+    """Look up a portrait on the candidate's specific Wikipedia page."""
     import json
     import urllib.parse
     import urllib.request
 
+    # Kansas Senate candidate Adam Hamilton is also the Methodist pastor.
+    # Wikimedia Commons identifies this file as Adam Hamilton (pastor).
+    if name == "Adam Hamilton":
+        return (
+            "https://commons.wikimedia.org/wiki/Special:FilePath/"
+            "Adam_Hamilton_on_the_Courage_to_Preach_%28cropped_2%29.png",
+            "Working Preacher / Wikimedia Commons (CC BY 4.0)",
+        )
+
+    page_titles = {
+        "Dan Sullivan": "Dan Sullivan (U.S. senator)",
+        "Mike Rogers": "Mike Rogers (Michigan politician)",
+        "Troy Jackson": "Troy Jackson (politician)",
+    }
+    title = page_titles.get(name, name)
     params = urllib.parse.urlencode({
         "action": "query",
         "format": "json",
         "prop": "pageimages",
         "piprop": "thumbnail",
-        "pithumbsize": 350,
+        "pithumbsize": 400,
         "redirects": 1,
-        "titles": name,
+        "titles": title,
     })
-
     url = "https://en.wikipedia.org/w/api.php?" + params
-
     try:
-        request = urllib.request.Request(
-            url,
-            headers={"User-Agent": "SenateSimulatorPortfolio/1.0"}
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Senate2026Simulator/1.0 (educational project)"}
         )
-        with urllib.request.urlopen(request, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=6) as response:
             data = json.load(response)
-
-        for page in data["query"]["pages"].values():
-            if page.get("title", "").lower() == name.lower():
-                return page.get("thumbnail", {}).get("source")
-    except Exception:
+        for page in data.get("query", {}).get("pages", {}).values():
+            if "missing" in page:
+                continue
+            photo = page.get("thumbnail", {}).get("source")
+            if photo:
+                return photo, "Wikipedia / Wikimedia Commons"
+    except (OSError, ValueError, KeyError):
         pass
-
-    return None
+    return None, None
 
 
 if selected_state in CANDIDATES:
-    candidates = CANDIDATES[selected_state]
+    import html
 
- 
+    candidates = CANDIDATES[selected_state]
     st.markdown("#### Meet the Candidates")
 
-    col1, col2 = st.columns(2, gap="small")
-
+    _, republican_col, democrat_col, _ = st.columns(
+        [0.45, 1, 1, 0.45], gap="small"
+    )
     for column, party, color in [
-        (col1, "R", "#ef5b63"),
-        (col2, "D", "#478cf4"),
+        (republican_col, "R", "#ef5b63"),
+        (democrat_col, "D", "#478cf4"),
     ]:
         with column:
             name = candidates[party]
-
+            party_label = "Republican" if party == "R" else "Democrat"
+            photo_url, photo_credit = candidate_photo(name)
+            if photo_url:
+                portrait = (
+                    f'<img src="{html.escape(photo_url, quote=True)}" '
+                    f'alt="Portrait of {html.escape(name, quote=True)}" '
+                    'style="width:180px;height:210px;object-fit:cover;'
+                    'object-position:center 20%;border-radius:12px;">'
+                )
+            else:
+                portrait = (
+                    '<div style="width:180px;height:210px;'
+                    'border-radius:12px;background:#192943;'
+                    'color:#b9c6d8;display:flex;align-items:center;'
+                    'justify-content:center;text-align:center;">'
+                    'Portrait unavailable</div>'
+                )
             st.markdown(
-                f"<h4 style='color:{color}; margin-bottom:8px;'>"
-                f"{'🔴 Republican' if party == 'R' else '🔵 Democrat'}"
-                "</h4>",
+                '<div style="max-width:230px;margin:0 auto;text-align:center;">'
+                f'<div style="font-weight:700;color:{color};margin-bottom:12px;">'
+                f'{party_label}</div>'
+                f'<div style="display:flex;justify-content:center;">{portrait}</div>'
+                '<div style="font-size:19px;font-weight:700;color:#edf2ff;'
+                'margin-top:12px;">'
+                f'{html.escape(name)}</div></div>',
                 unsafe_allow_html=True,
             )
-
-            photo = candidate_photo(name)
-
-            
-if name == "Adam Hamilton":
-    st.caption(
-        "Photo: Western Pennsylvania Conference – UMC "
-        "via Wikimedia Commons · CC BY 4.0"
-    )
-    st.markdown(
-        "[Image source and license]"
-        "(https://commons.wikimedia.org/wiki/"
-        "File:Adam_Hamilton_on_the_Courage_to_Preach_"
-        "(cropped_2).png)"
-    )
+            if photo_credit:
+                st.caption(f"Photo: {photo_credit}")
+            else:
+                st.caption("No verified portrait loaded")
 else:
-    st.caption("Image: Wikipedia / Wikimedia")
-
-    st.markdown(f"### {name}")
-
-
-#else:
-    st.info(
-        "Candidate profiles for this state "
-        "will be added in a future update."
-    )
-
-
-
+    st.info("Candidate profiles for this state are not loaded yet.")
 
 
 # Published polling snapshot
