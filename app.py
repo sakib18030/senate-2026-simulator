@@ -306,41 +306,48 @@ st.markdown("#### 📊 Current Polling")
 
 poll = POLLING.get(selected_state)
 
+
 if poll:
     republican_pct = poll["R"]
     democrat_pct = poll["D"]
+    other_pct = max(
+        0, 100 - republican_pct - democrat_pct
+    )
 
-    left_poll, right_poll = st.columns(2)
+    # Candidate names from the existing profiles
+    names = CANDIDATES.get(
+        selected_state,
+        {"R": "Republican", "D": "Democrat"}
+    )
+
+    st.markdown("##### Polling Snapshot")
+
+    # Compact polling metrics
+    left_poll, right_poll = st.columns(2, gap="small")
 
     with left_poll:
         st.metric(
-            "🔴 Republican",
+            f"🔴 {names['R']} (R)",
             f"{republican_pct:.1f}%"
         )
 
     with right_poll:
         st.metric(
-            "🔵 Democrat",
+            f"🔵 {names['D']} (D)",
             f"{democrat_pct:.1f}%"
         )
 
-    # Horizontal polling comparison
-    import plotly.graph_objects as go
-
-    other_pct = max(
-        0, 100 - republican_pct - democrat_pct
-    )
-
+    # Compact red-blue comparison bar
     polling_fig = go.Figure()
 
     for label, value, color in [
-        ("Democrat", democrat_pct, "#478cf4"),
         ("Republican", republican_pct, "#ef5b63"),
+        ("Democrat", democrat_pct, "#478cf4"),
         ("Other / undecided", other_pct, "#8c97aa"),
     ]:
         polling_fig.add_trace(
             go.Bar(
-                y=["Polling share"],
+                y=["Polling"],
                 x=[value],
                 name=label,
                 orientation="h",
@@ -348,40 +355,49 @@ if poll:
                 hovertemplate=(
                     f"{label}: {value:.1f}%<extra></extra>"
                 ),
+                showlegend=False,
             )
         )
 
     polling_fig.update_layout(
         barmode="stack",
-        height=130,
-        margin=dict(l=0, r=0, t=0, b=0),
+        height=85,
+        margin=dict(l=0, r=0, t=5, b=5),
         paper_bgcolor="#0b1020",
         plot_bgcolor="#0b1020",
-        font=dict(color="#edf2ff"),
         xaxis=dict(
             range=[0, 100],
             visible=False,
+            fixedrange=True,
         ),
-        yaxis=dict(visible=False),
-        legend=dict(
-            orientation="h",
-            y=-0.3,
+        yaxis=dict(
+            visible=False,
+            fixedrange=True,
         ),
+        bargap=0.55,
     )
 
     st.plotly_chart(
         polling_fig,
         use_container_width=True,
+        config={"displayModeBar": False},
     )
 
     st.caption(
-        f"Source: {poll['source']} | "
-        f"Period: {poll['dates']}"
+        "🔴 Republican   |   🔵 Democrat   |   "
+        "⚪ Other / undecided"
+    )
+
+    # Source and polling dates
+    st.caption(
+        f"📅 {poll['dates']}  |  "
+        f"📊 {poll['source']}"
     )
 
     st.markdown(
-        f"[View original polling data]({poll['url']})"
+        f"🔗 [View polling source]({poll['url']})"
     )
+
 
 else:
     st.info(
