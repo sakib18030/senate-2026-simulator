@@ -1,30 +1,33 @@
-# Senate 2026 · Battle for 51
+# Senate 2026 — Interactive Polling & Scenario Simulator (Version 2)
 
-A customizable **2026 U.S. Senate election simulator** built using Python, Streamlit, Plotly, and pandas.
+A Python / Streamlit / Plotly dashboard showing 65 fixed U.S. Senate seats, 35 contested elections, a **dated polling snapshot**, and editable hypothetical election outcomes.
 
-## Run it
+## Deploy on Streamlit Community Cloud
+
+Upload `app.py`, `requirements.txt`, `polls.csv`, and this `README.md` to the root of your public GitHub repository (`sakib18030/senate-2026-simulator`). Streamlit auto-redeploys when code changes are committed. **All four files are needed.**
+
+## Data refresh
+
+The app checks the repository's `polls.csv` hourly and falls back to the bundled local copy if it cannot load the remote file. **Poll numbers do not automatically scrape a third-party polling service.** Update `polls.csv` in GitHub when new published polls arrive, providing source URLs and reported dates. Use the “Check data source now” sidebar button to bypass the cache. A proper licensed automated feed could be connected later.
+
+For each poll, supply `state` (2-letter postal code), `dem_candidate`, `rep_candidate`, `dem_pct`, `rep_pct`, `pollster`, `reported_date` (YYYY-MM-DD), `source_url`, and optional `image_dem` and `image_rep` direct `https://` image URLs (only use photos you are permitted to reproduce). Missing values mean the race is unassigned. A poll tie also stays unassigned.
+
+**Important:** `polls.csv` contains *single published poll results*, not a weighted polling average. It currently covers only a subset of the 35 contested elections; other races remain unassigned. The map is a scenario visualization, **not a prediction of election winners**. Candidate profiles shown are tied to specific surveys, not necessarily a complete candidate list in multiparty races.
+
+## Source links
+- https://www.realclearpolling.com/latest-polls/senate
+- https://www.cookpolitical.com/ratings/senate-race-ratings
+- https://docs.streamlit.io/develop/api-reference/charts/st.plotly_chart
+
+## Run locally (optional)
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Your browser opens the dashboard. Click D / R / Uncalled on any of the 35 races to update the national chamber count, 100-seat chart, and U.S. map. Use the sidebar to reset to the *current holder* baseline or try the *rating-based* scenario. Download results as CSV.
+## Roadmap
 
-## Assumptions
-
-- Election Day: November 3, 2026. 35 contested seats = 33 regularly scheduled races + special elections in Ohio and Florida.
-- 65 seats are not up: 31 Republican and 34 Democratic-caucus (32 Democrats plus 2 independents).
-- 2026 races presently held by: 22 Republicans and 13 Democrats.
-- By default each contested seat is assigned to its current holder (not a prediction).
-- Rating labels are an October 6, 2026 snapshot and are not constantly refreshed.
-- UI is a simplified two-caucus model: Nebraska has a notable independent candidacy not accurately modeled by the D/R switch.
-- State map describes the contested Senate seat only; two senators represent each state in the real chamber.
-- Uncalled seats are gray. A party only has an assured majority once it has at least 51 assigned seats. At 50-50 the Republican vice president casts the tie-breaking vote in this cycle.
-
-## Sources
-
-- https://www.uspresidentialelectionnews.com/2026-senate-elections/ (updated Oct. 7, 2026)
-- https://www.cookpolitical.com/ratings/senate-race-ratings
-
-No live results or web API required.
+- Add more individually verified poll entries and authorized candidate photo URLs.
+- Add poll history and separate multiple-poll average rather than overwriting the latest survey.
+- Improve state clicking UX, scenario comparison, and independent/third-party candidate handling.
